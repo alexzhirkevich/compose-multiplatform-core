@@ -48,10 +48,12 @@ import androidx.compose.ui.platform.PlatformDragAndDropManager
 import androidx.compose.ui.platform.PlatformTextInputMethodRequest
 import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.ViewConfiguration
+import androidx.compose.ui.platform.WakeLock
 import androidx.compose.ui.platform.WebTextInputService
 import androidx.compose.ui.platform.WebTextToolbar
 import androidx.compose.ui.platform.WindowInfoImpl
 import androidx.compose.ui.platform.accessibility.ComposeWebSemanticsListener
+import androidx.compose.ui.platform.wakeLock
 import androidx.compose.ui.scene.CanvasLayersComposeScene
 import androidx.compose.ui.scene.ComposeSceneDragAndDropNode
 import androidx.compose.ui.scene.ComposeScenePointer
@@ -208,6 +210,10 @@ internal class ComposeWindow(
     // Used in WebTextInputService. Also see https://youtrack.jetbrains.com/issue/CMP-8611
     private var activeTouchOffset: Offset? = null
 
+    private val mainScope = MainScope()
+
+    private val wakeLock: WakeLock = wakeLock()
+
     private val platformContext: PlatformContext = object : PlatformContext by PlatformContext.Empty {
         override val windowInfo get() = _windowInfo
 
@@ -287,6 +293,18 @@ internal class ComposeWindow(
         override val viewConfiguration =
             object : ViewConfiguration by PlatformContext.Empty.viewConfiguration {
                 override val touchSlop: Float get() = with(density) { 18.dp.toPx() }
+            }
+
+        override var isKeepScreenOnEnabled: Boolean
+            get() = wakeLock.isAcquired
+            set(value) {
+                mainScope.launch {
+                    if (value) {
+                        wakeLock.request()
+                    } else {
+                        wakeLock.release()
+                    }
+                }
             }
 
         override fun setPointerIcon(pointerIcon: PointerIcon) {
@@ -487,6 +505,7 @@ internal class ComposeWindow(
         // modern browsers supposed to garbage collect all events on the element disposed
         // but actually we never can be sure dom element was collected in first place
         canvasEvents.dispose()
+        platformContext.isKeepScreenOnEnabled = false
         isDisposed = true
     }
 
