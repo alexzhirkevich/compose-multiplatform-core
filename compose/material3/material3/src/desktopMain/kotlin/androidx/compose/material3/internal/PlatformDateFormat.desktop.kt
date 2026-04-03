@@ -23,6 +23,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -56,19 +57,15 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
         // TODO: support ICU skeleton on JVM
         // Maybe it will be supported in kotlinx.datetime in the future.
 
-        val pattern = when(skeleton){
+        val pattern = when (skeleton) {
             DatePickerDefaults.YearAbbrMonthDaySkeleton -> {
-                return DateTimeFormatter
-                    .ofLocalizedDate(FormatStyle.MEDIUM)
-                    .localizedBy(locale)
-                    .format(Instant.ofEpochMilli(utcTimeMillis).atOffset(ZoneOffset.UTC))
+                return formatWithStyle(FormatStyle.MEDIUM)
             }
+
             DatePickerDefaults.YearMonthWeekdayDaySkeleton -> {
-                return DateTimeFormatter
-                    .ofLocalizedDate(FormatStyle.FULL)
-                    .localizedBy(locale)
-                    .format(Instant.ofEpochMilli(utcTimeMillis).atOffset(ZoneOffset.UTC))
+                return formatWithStyle(FormatStyle.FULL)
             }
+
             DatePickerDefaults.YearMonthSkeleton -> "LLLL yyyy" // L is a pattern for standalone month (without day)
             else -> skeleton
         }
@@ -91,22 +88,23 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
     // From CalendarModelImpl.android.kt weekdayNames.
     //
     // Legacy model returns short ('Mon') format while newer version returns narrow ('M') format
-    actual val weekdayNames: List<Pair<String, String>> get() {
-        return DayOfWeek.entries.map {
-            it.getDisplayName(
-                TextStyle.FULL,
-                locale
-            ) to it.getDisplayName(
-                TextStyle.NARROW,
-                locale
-            )
+    actual val weekdayNames: List<Pair<String, String>>
+        get() {
+            return DayOfWeek.entries.map {
+                it.getDisplayName(
+                    TextStyle.FULL,
+                    locale
+                ) to it.getDisplayName(
+                    TextStyle.NARROW,
+                    locale
+                )
+            }
         }
-    }
 
     // https://android.googlesource.com/platform/frameworks/base/+/jb-release/core/java/android/text/format/DateFormat.java
     //
     // public static boolean is24HourFormat(Context context) -- used by Android date format
-    actual fun is24HourFormat() : Boolean {
+    actual fun is24HourFormat(): Boolean {
         val dateFormat = DateFormat.getTimeInstance(DateFormat.LONG, locale)
 
         if (dateFormat !is SimpleDateFormat)
@@ -114,4 +112,13 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
 
         return 'H' in dateFormat.toPattern()
     }
+
+    private fun formatWithStyle(
+        utcTimeMillis: Long,
+        style: FormatStyle
+    ) = DateTimeFormatter
+        .ofLocalizedDate(style)
+        .localizedBy(locale)
+        .withZone(ZoneId.of("UTC"))
+        .format(Instant.ofEpochMilli(utcTimeMillis).atOffset(ZoneOffset.UTC))
 }

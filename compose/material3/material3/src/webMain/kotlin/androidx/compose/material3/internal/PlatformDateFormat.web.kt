@@ -75,6 +75,7 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
                 locales = locale.toLanguageTag(),
                 options = dateLocaleOptions {
                     month = it
+                    timeZone = "UTC"
                 }
             )
         }
@@ -84,6 +85,7 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
                 locales = locale.toLanguageTag(),
                 options = dateLocaleOptions {
                     weekday = it
+                    timeZone = "UTC"
                 }
             )
         }
@@ -106,6 +108,8 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
         return jsDate.toLocaleDateString(
             locales = locale.toLanguageTag(),
             options = dateLocaleOptions {
+                timeZone = "UTC"
+
                 when {
                     skeleton.contains("y", true) -> NUMERIC
                     else -> null
