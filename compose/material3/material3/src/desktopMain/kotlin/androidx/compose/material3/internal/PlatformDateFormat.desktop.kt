@@ -59,11 +59,11 @@ internal actual class PlatformDateFormat actual constructor(private val locale: 
 
         val pattern = when (skeleton) {
             DatePickerDefaults.YearAbbrMonthDaySkeleton -> {
-                return formatWithStyle(FormatStyle.MEDIUM)
+                return formatWithStyle(utcTimeMillis, FormatStyle.MEDIUM)
             }
 
             DatePickerDefaults.YearMonthWeekdayDaySkeleton -> {
-                return formatWithStyle(FormatStyle.FULL)
+                return formatWithStyle(utcTimeMillis, FormatStyle.FULL)
             }
 
             DatePickerDefaults.YearMonthSkeleton -> "LLLL yyyy" // L is a pattern for standalone month (without day)
