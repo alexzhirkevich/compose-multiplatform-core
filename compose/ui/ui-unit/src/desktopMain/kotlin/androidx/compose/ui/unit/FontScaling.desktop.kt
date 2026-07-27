@@ -20,6 +20,6 @@ import androidx.compose.ui.unit.fontscaling.FontScaleConverter
 
 internal actual fun isNonLinearFontScalingActive(fontScale: Float): Boolean = false
 
-internal actual val NonLinearFontSizeAnchors : List<Float> get() = emptyList()
-
 internal actual fun defaultFontScaleConverters() : Map<Float, FontScaleConverter> = emptyMap()
+
+internal actual val NonLinearFontSizeAnchors : List<Float> get() = emptyList()
